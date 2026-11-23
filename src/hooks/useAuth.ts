@@ -87,7 +87,7 @@ export function useAuth() {
     setAuthError(null);
     try {
       const response = await authService.login(credentials);
-      if (response.success) {
+      if (response.success && response.token && response.user) {
         return true;
       }
       setAuthError(response.message || 'Credenciales inválidas');

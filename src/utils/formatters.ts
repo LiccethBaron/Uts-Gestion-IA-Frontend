@@ -1,4 +1,5 @@
 import { DocumentFormat } from '../types/document.types';
+import { env } from '../config/env';
 
 /**
  * Convierte un score de similitud coseno (0.0 a 1.0) en formato de porcentaje legible.
@@ -25,7 +26,7 @@ export function getSimilarityLevel(score: number): {
       progressClass: 'bg-emerald-600',
     };
   }
-  if (score >= 0.60) {
+  if (score >= env.SIMILARITY_THRESHOLD) {
     return {
       label: 'Afinidad moderada',
       badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',

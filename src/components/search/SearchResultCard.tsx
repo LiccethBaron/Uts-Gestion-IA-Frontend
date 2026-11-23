@@ -7,6 +7,7 @@ import {
   getSimilarityLevel,
   getFormatBadgeClasses,
 } from '../../utils/formatters';
+import { env } from '../../config/env';
 
 interface SearchResultCardProps {
   document: DocumentItem;
@@ -20,7 +21,7 @@ export const SearchResultCard: React.FC<SearchResultCardProps> = ({
   onDownload,
 }) => {
   const similarity = getSimilarityLevel(document.scoreSimilitud);
-  const isHighAffinity = document.scoreSimilitud >= 0.60;
+  const isHighAffinity = document.scoreSimilitud >= env.SIMILARITY_THRESHOLD;
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md">

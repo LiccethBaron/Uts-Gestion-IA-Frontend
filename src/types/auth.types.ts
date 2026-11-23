@@ -9,7 +9,7 @@ export interface User {
   nombreCompleto: string;
   email: string;
   rol: RoleName;
-  estadoActivo: boolean;
+  estadoActivo?: boolean;
   createdAt?: string;
 }
 
@@ -18,10 +18,16 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
+export interface LoginPayload {
   token: string;
   user: User;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  data?: LoginPayload;
+  token?: string;
+  user?: User;
   message?: string;
 }
 
@@ -31,4 +37,3 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
 }
-

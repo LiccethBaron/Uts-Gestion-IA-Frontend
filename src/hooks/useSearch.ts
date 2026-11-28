@@ -9,6 +9,7 @@ import {
   SearchQueryDTO,
 } from '../types/document.types';
 import { useDebounce } from './useDebounce';
+import { env } from '../config/env';
 
 export interface UseSearchFilters {
   tipo?: string;
@@ -41,7 +42,7 @@ export function useSearch(initialQuery: string = '') {
   const [page, setPage] = useState<number>(1);
   const pageSize = 10;
 
-  const debouncedQuery = useDebounce(query, 350);
+  const debouncedQuery = useDebounce(query, env.SEARCH_DEBOUNCE_MS);
   const trimmedQuery = debouncedQuery.trim();
 
   const hasSearchCriteria = Boolean(

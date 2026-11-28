@@ -11,25 +11,45 @@ function notifyAuthChange(): void {
   }
 }
 
+export interface LoginResult {
+  success: boolean;
+  token?: string;
+  user?: User;
+  message?: string;
+}
+
 /**
  * Servicio de autenticación y sesión administrativa (CU05, CU06).
  */
 export const authService = {
   /**
    * Inicia sesión con credenciales de administrador (CU05).
+   * Soporta respuestas envueltas en `data: { token, user }` y respuestas planas.
    */
-  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+  async login(credentials: LoginCredentials): Promise<LoginResult> {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
 
-    if (response.success && response.token) {
+    const token = response.data?.token ?? response.token;
+    const user = response.data?.user ?? response.user;
+
+    if (response.success && token && user) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem(TOKEN_KEY, response.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
         notifyAuthChange();
       }
+      return {
+        success: true,
+        token,
+        user,
+        message: response.message,
+      };
     }
 
-    return response;
+    return {
+      success: false,
+      message: response.message || 'No se recibió el token de sesión del servidor.',
+    };
   },
 
   /**

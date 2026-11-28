@@ -1,9 +1,9 @@
+import { env } from '../config/env';
+
 /**
  * Cliente HTTP desacoplado para la API REST del backend UTS.
- * Manejo centralizado de tokens JWT, headers institucionales y excepciones.
+ * Manejo centralizado de tokens JWT, headers institucionales, FormData y excepciones.
  */
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export class ApiError extends Error {
   public status: number;
@@ -17,9 +17,13 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
+export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
+  timeoutMs?: number;
 }
+
+type MutationRequestOptions = Omit<RequestOptions, 'method' | 'body'>;
+type GetRequestOptions = Omit<RequestOptions, 'method' | 'params' | 'body'>;
 
 class ApiClient {
   private getAuthToken(): string | null {
@@ -27,10 +31,18 @@ class ApiClient {
     return localStorage.getItem('uts_auth_token');
   }
 
-  public async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { params, headers, ...restOptions } = options;
+  private serializeBody(body?: unknown): BodyInit | undefined {
+    if (body === undefined || body === null) return undefined;
+    if (typeof FormData !== 'undefined' && body instanceof FormData) {
+      return body;
+    }
+    return JSON.stringify(body);
+  }
 
-    let url = `${BASE_URL}${endpoint}`;
+  public async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    const { params, headers, timeoutMs, ...restOptions } = options;
+
+    let url = `${env.API_URL}${endpoint}`;
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -45,9 +57,13 @@ class ApiClient {
     }
 
     const token = this.getAuthToken();
+    const isFormData =
+      typeof FormData !== 'undefined' && restOptions.body instanceof FormData;
+
     const defaultHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
+      // Para FormData el navegador asigna multipart/form-data junto con su boundary
+      ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     };
 
     if (token) {
@@ -57,6 +73,7 @@ class ApiClient {
     try {
       const response = await fetch(url, {
         ...restOptions,
+        signal: restOptions.signal ?? AbortSignal.timeout(timeoutMs ?? env.API_TIMEOUT_MS),
         headers: {
           ...defaultHeaders,
           ...(headers as Record<string, string>),
@@ -87,6 +104,12 @@ class ApiClient {
       return (await response.json()) as T;
     } catch (error) {
       if (error instanceof ApiError) throw error;
+      if (
+        error instanceof DOMException &&
+        (error.name === 'TimeoutError' || error.name === 'AbortError')
+      ) {
+        throw new ApiError('Tiempo de espera agotado al conectar con el servidor', 408);
+      }
       throw new ApiError(
         error instanceof Error ? error.message : 'Error de conexión con el servidor',
         0
@@ -94,35 +117,53 @@ class ApiClient {
     }
   }
 
-  public get<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET', params });
+  public get<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | undefined>,
+    options?: GetRequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'GET', params });
   }
 
-  public post<T>(endpoint: string, body?: unknown): Promise<T> {
+  public post<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: MutationRequestOptions
+  ): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: this.serializeBody(body),
     });
   }
 
-  public put<T>(endpoint: string, body?: unknown): Promise<T> {
+  public put<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: MutationRequestOptions
+  ): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: this.serializeBody(body),
     });
   }
 
-  public patch<T>(endpoint: string, body?: unknown): Promise<T> {
+  public patch<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: MutationRequestOptions
+  ): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: this.serializeBody(body),
     });
   }
 
-  public delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  public delete<T>(endpoint: string, options?: MutationRequestOptions): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 }
 
 export const apiClient = new ApiClient();
-

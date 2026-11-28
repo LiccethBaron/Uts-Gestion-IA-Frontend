@@ -61,8 +61,26 @@ export interface FolderItem {
   dropboxId: string;
   nombre: string;
   rutaCompleta: string;
+  createdAt?: string;
+  totalSubcarpetas?: number;
   totalDocumentos?: number;
   subcarpetas?: FolderItem[];
+}
+
+export interface CreateFolderPayload {
+  nombre: string;
+  carpetaPadreId?: string;
+}
+
+export interface UpdateFolderPayload {
+  nombre?: string;
+  carpetaPadreId?: string;
+}
+
+export interface FolderMutationResponse {
+  success: boolean;
+  message: string;
+  data?: FolderItem;
 }
 
 export interface AuditLogItem {
@@ -83,5 +101,65 @@ export interface SyncLogItem {
   totalDetectados: number;
   totalProcesados: number;
   totalFallidos: number;
+}
+
+export interface CreateDocumentPayload {
+  carpetaId: string;
+  codigoDocumental: string;
+  nombre: string;
+  descripcion: string;
+  formato: DocumentFormat;
+  tipo: string;
+  anio: number;
+  file?: File | null;
+  dropboxFileId?: string;
+  rutaCompleta?: string;
+  hashContenido?: string;
+}
+
+export interface UpdateDocumentMetadataPayload {
+  carpetaId?: string;
+  codigoDocumental?: string;
+  nombre?: string;
+  descripcion?: string;
+  tipo?: string;
+  anio?: number;
+  formato?: DocumentFormat;
+  file?: File | null;
+  dropboxFileId?: string;
+  rutaCompleta?: string;
+  hashContenido?: string;
+}
+
+export interface BackendDocumentRecord {
+  id: string;
+  carpetaId: string;
+  codigoDocumental: string | null;
+  dropboxFileId: string;
+  nombre: string;
+  descripcion: string | null;
+  formato: string;
+  tipo: string | null;
+  anio: number | null;
+  rutaCompleta: string;
+  hashContenido?: string;
+  fechaModificacionDropbox?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  carpeta?: {
+    id: string;
+    nombre: string;
+    rutaCompleta: string;
+  };
+}
+
+export interface DropboxFolderFileItem {
+  id: string;
+  name: string;
+  pathDisplay: string;
+  size: number;
+  serverModified: string;
+  contentHash?: string;
+  yaVinculado: boolean;
 }
 

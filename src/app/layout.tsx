@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Link from 'next/link';
+import { HeaderNav } from '../components/layout/HeaderNav';
 
 export const metadata: Metadata = {
   title: 'Búsqueda Semántica y Gestión Documental | UTS',
@@ -14,8 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+    <html lang="es" className="h-full antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-full flex flex-col bg-slate-50 text-slate-900"
+        suppressHydrationWarning
+      >
         {/* Barra de navegación superior institucional */}
         <header className="sticky top-0 z-40 border-b border-emerald-900/10 bg-white/95 backdrop-blur-md shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -33,26 +37,7 @@ export default function RootLayout({
             </Link>
 
             {/* Navegación y Accesos */}
-            <nav className="flex items-center gap-4 text-sm font-medium">
-              <Link
-                href="/search"
-                className="text-slate-600 hover:text-emerald-700 transition px-2 py-1"
-              >
-                Buscador
-              </Link>
-              <Link
-                href="/explorer"
-                className="text-slate-600 hover:text-emerald-700 transition px-2 py-1"
-              >
-                Árbol de Carpetas
-              </Link>
-              <Link
-                href="/login"
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:text-emerald-700 transition"
-              >
-                Acceso Admin
-              </Link>
-            </nav>
+            <HeaderNav />
           </div>
         </header>
 
